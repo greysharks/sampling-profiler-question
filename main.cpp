@@ -25,6 +25,37 @@ std::vector<Event> convertToTrace(const std::vector<Sample> &samples) {
   // Event{"start", 7.5, "main"}
   // Event{"start", 9.2, "my_fn"}
   // Event{"end", 10.7, "my_fn"}
+  
+  std::vector<Event> events;
+  std::vector<std::string> profiler;
+
+  for (const auto &s : samples) { // s for sample
+    std::string ev_kind;
+    std::string ev_name;
+
+    if (profiler.size() > s.stack.size()) {
+      ev_kind = "end";
+      ev_name = profiler.back();
+      profiler.pop_back();
+    }
+    else {
+      if (profiler.size() < 1) {
+        ev_kind = "start";
+        ev_name = s.stack.back();
+        profiler.push_back(s.stack.back());
+      }
+      else if (profiler.back() != s.stack.back()) {
+        ev_kind = "start";
+        ev_name = s.stack.back();
+        profiler.push_back(s.stack.back());
+      }
+    }
+
+    Event ev{ev_kind, s.ts, ev_name};
+    events.push_back(ev);
+  }
+
+  return events;
 
   throw std::runtime_error("Function not implemented");
 }
